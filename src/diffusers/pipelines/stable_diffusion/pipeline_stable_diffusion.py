@@ -52,8 +52,8 @@ class StableDiffusionPipeline(DiffusionPipeline):
         tokenizer: CLIPTokenizer,
         unet: UNet2DConditionModel,
         scheduler: Union[DDIMScheduler, PNDMScheduler, LMSDiscreteScheduler],
-        safety_checker: StableDiffusionSafetyChecker,
-        feature_extractor: CLIPFeatureExtractor,
+        # safety_checker: StableDiffusionSafetyChecker = None,
+        # feature_extractor: CLIPFeatureExtractor = None
     ):
         super().__init__()
 
@@ -76,9 +76,9 @@ class StableDiffusionPipeline(DiffusionPipeline):
             text_encoder=text_encoder,
             tokenizer=tokenizer,
             unet=unet,
-            scheduler=scheduler,
-            safety_checker=safety_checker,
-            feature_extractor=feature_extractor,
+            scheduler=scheduler
+            # safety_checker=safety_checker,
+            # feature_extractor=feature_extractor,
         )
 
     def enable_attention_slicing(self, slice_size: Optional[Union[str, int]] = "auto"):
@@ -94,6 +94,7 @@ class StableDiffusionPipeline(DiffusionPipeline):
                 a number is provided, uses as many slices as `attention_head_dim // slice_size`. In this case,
                 `attention_head_dim` must be a multiple of `slice_size`.
         """
+        print("chop, chop")
         if slice_size == "auto":
             # half the attention head size is usually a good trade-off between
             # speed and memory
@@ -331,10 +332,11 @@ class StableDiffusionPipeline(DiffusionPipeline):
         # we always cast to float32 as this does not cause significant overhead and is compatible with bfloa16
         image = image.cpu().permute(0, 2, 3, 1).float().numpy()
 
-        safety_checker_input = self.feature_extractor(self.numpy_to_pil(image), return_tensors="pt").to(self.device)
-        image, has_nsfw_concept = self.safety_checker(
-            images=image, clip_input=safety_checker_input.pixel_values.to(text_embeddings.dtype)
-        )
+#        safety_checker_input = self.feature_extractor(self.numpy_to_pil(image), return_tensors="pt").to(self.device)
+#        image, has_nsfw_concept = self.safety_checker(
+#           images=image, clip_input=safety_checker_input.pixel_values.to(text_embeddings.dtype)
+#        )
+        image, has_nsfw_concept = image, False
 
         if output_type == "pil":
             image = self.numpy_to_pil(image)

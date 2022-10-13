@@ -334,6 +334,7 @@ def main():
             pipeline = StableDiffusionPipeline.from_pretrained(
                 args.pretrained_model_name_or_path, torch_dtype=torch_dtype
             )
+            pipeline.enable_attention_slicing()
             pipeline.set_progress_bar_config(disable=True)
 
             num_new_images = args.num_class_images - cur_class_images
@@ -344,11 +345,10 @@ def main():
 
             sample_dataloader = accelerator.prepare(sample_dataloader)
             pipeline.to(accelerator.device)
-
             for example in tqdm(
                 sample_dataloader, desc="Generating class images", disable=not accelerator.is_local_main_process
             ):
-                images = pipeline(example["prompt"]).images
+                images = pipeline(example["prompt"],num_inference_steps=100).images
 
                 for i, image in enumerate(images):
                     image.save(class_images_dir / f"{example['index'][i] + cur_class_images}.jpg")
